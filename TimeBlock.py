@@ -32,12 +32,13 @@ class TimeBlock:
 		#If the latest start is before the earliest end there's a problem
 	def to_numeric(self,hour,min):#convert a given hour and minute to the number of minutes since midnight
 		return hour*60+min
-	
+		
 	def start_numeric(self):#convert this time block's start time to the number of minutes since midnight
 		return self.to_numeric(self.start_time_hour,self.start_time_min)
 	
 	def end_numeric(self):#convert this time block's end time to the number of minutes since midnight
 		return self.to_numeric(self.end_time_hour,self.end_time_min)
+		
 	def to_string(self):
 		return self.num_to_day[self.day]+" "+str(self.start_time_hour)+":"+str(self.start_time_min)+"-"+str(self.end_time_hour)+":"+str(self.end_time_min)
 
