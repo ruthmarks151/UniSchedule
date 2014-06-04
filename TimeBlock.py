@@ -1,9 +1,9 @@
 class TimeBlock:
-	start_time_hour=0
+	"""start_time_hour=0
 	start_time_min=0
 	end_time_hour=0
 	end_time_min=0
-	day=1
+	day=1"""
 	#using 2 letter day abreviations Mo Tu We Th Fr
 	num_to_day = {1: "Mn",
 		2 : "Tu",

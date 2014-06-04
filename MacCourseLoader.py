@@ -21,7 +21,7 @@ class MacCourseLoader():
 	def is_course_code(self,text):
 		if len(text)!=4:
 			return False
-		return (not text[0].isalpha())and(text[1].isalpha())and(text[2].isalpha())and(not text[3].isalpha())
+		return (not text[0].isalpha())and(text[1].isalpha())and(not text[3].isalpha())
 		
 	def is_class_type(self,text):
 		if len(text)!=3:
@@ -54,6 +54,7 @@ class MacCourseLoader():
 					return False
 					
 		return True
+		
 loader=MacCourseLoader()
 loader.output_file_name="stripped.txt"
 loader.stripped_file=open("stripped.txt", 'r')
