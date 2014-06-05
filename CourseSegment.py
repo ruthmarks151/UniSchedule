@@ -1,7 +1,8 @@
 from TimeBlock import TimeBlock
 class CourseSegment:
-	def __init__(self,given_name):
+	def __init__(self,given_name,given_prof):
 		self.name=given_name
+		self.prof=given_prof
 		self.time_blocks = []
 		
 	def add (self,given_block):
@@ -16,16 +17,22 @@ class CourseSegment:
 				if block.conflict_with(other):
 					return True
 		return False
-
-chem_core_1=CourseSegment("C01")
+	
+	def to_string(self):
+		out=""
+		for block in self.time_blocks:
+			out+=block.to_string()+"\n"
+		return out
+		
+chem_core_1=CourseSegment("C01","Chem Prof")
 chem_core_1.add(TimeBlock(1,8,00,9,00))
 chem_core_1.add(TimeBlock(2,8,30,9,30))
 
-math_core_1=CourseSegment("C01") 
+math_core_1=CourseSegment("C01","Math Prof") 
 math_core_1.add(TimeBlock(4,9,00,10,30))
 math_core_1.add(TimeBlock(1,9,00,10,0))
 
-math_core_2=CourseSegment("C01") 
+math_core_2=CourseSegment("C01","Math Prof") 
 math_core_2.add(TimeBlock(1,8,30,10,30))
 math_core_2.add(TimeBlock(3,9,00,10,0))
 
