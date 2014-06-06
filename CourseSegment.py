@@ -1,8 +1,9 @@
 from TimeBlock import TimeBlock
 class CourseSegment:
-	def __init__(self,given_name,given_prof):
+	def __init__(self,given_name,given_prof=None,given_room=None):
 		self.name=given_name
 		self.prof=given_prof
+		self.room=given_room
 		self.time_blocks = []
 		
 	def add (self,given_block):
@@ -22,6 +23,8 @@ class CourseSegment:
 		out=""
 		for block in self.time_blocks:
 			out+=block.to_string()+"\n"
+		if self.room:	out+=self.room+"\n"
+		if self.prof:	out+=self.prof+"\n"
 		return out
 		
 chem_core_1=CourseSegment("C01","Chem Prof")

@@ -28,13 +28,16 @@ class Course():
 		out+=str(self.term)+"\n"
 		out+=self.section+"\n"
 		for segment in self.cores:
-			out+=segment+": "+self.cores[segment].to_string()+"\n"
+			out+=segment+"\n"+self.cores[segment].to_string()+"\n"
 		for segment in self.labs:
-			out+=segment+": "+self.labs[segment].to_string()+"\n"
+			out+=segment+"\n"+self.labs[segment].to_string()+"\n"
 		for segment in self.tutorials:
-			out+=segment+": "+self.tutorials[segment].to_string()+"\n"
+			out+=segment+"\n"+self.tutorials[segment].to_string()+"\n"
 		return out
-			
+	
+	def tuple_key(self):
+		return (self.department,self.code,self.term,self.section)
+"""	
 chem_101=Course("Chemistry","1C01","Intro To Chemistry",1,"DAY")
 
 chem_core_1=CourseSegment("C01","Chem Prof")
@@ -60,3 +63,5 @@ chem_101.add(chem_lab_1)
 chem_101.add(chem_lab_2)
 
 print(chem_101.to_string())
+print(chem_101.tuple_key())
+"""

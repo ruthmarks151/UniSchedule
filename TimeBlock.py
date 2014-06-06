@@ -5,13 +5,13 @@ class TimeBlock:
 	end_time_min=0
 	day=1"""
 	#using 2 letter day abreviations Mo Tu We Th Fr
-	num_to_day = {1: "Mn",
+	num_to_day = {1: "Mo",
 		2 : "Tu",
 		3 : "We",
 		4 : "Th",
 		5 : "Fr",
 	}
-	day_to_num = {"Mn" : 1,
+	day_to_num = {"Mo" : 1,
 		"Tu" : 2,
 		"We" : 3,
 		"Th" : 4,
