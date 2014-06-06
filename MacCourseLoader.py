@@ -22,10 +22,9 @@ class MacCourseLoader():
 	
 	def pop_course(self):
 		line=self.read_line()
-		if not self.is_course_code(line):
+		if self.is_dept(line):
 			self.current_dept=line
-			line=self.read_line()
-			assert self.is_course_code(line)		
+			line=self.read_line()		
 		course_code=line
 		assert self.is_course_code(course_code)
 		course_name=self.read_line()
@@ -38,12 +37,17 @@ class MacCourseLoader():
 		new_course=Course(self.current_dept,course_code,course_name,course_term,course_section)
 		if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
 				self.read_line()
-		while self.is_class_type(self.peek_line()):
-			new_course_segment=self.read_course_segment()
-			if new_course_segment:
-				new_course.add(new_course_segment)
-			if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+		if "CANCELLED" in self.peek_line():
+			while not (self.is_course_code(self.peek_line()) or self.is_dept(self.peek_line())):
 				self.read_line()
+			return None
+		else:	
+			while self.is_class_type(self.peek_line()):
+				new_course_segment=self.read_course_segment()
+				if new_course_segment:
+					new_course.add(new_course_segment)
+				if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+					self.read_line()
 		return new_course
 		
 	def read_course_segment(self):
@@ -75,10 +79,8 @@ class MacCourseLoader():
 			if self.is_prof(line):
 				new_segment.prof=self.read_line()
 				line=self.peek_line()
-			if  self.is_added_message(self.peek_line()):
+			if  not (self.is_course_code(line) or self.is_dept(line) or self.is_days(line) or self.is_class_type(line)):#self.is_added_message(self.peek_line()):
 				line=self.read_line()
-			if "EOW" in self.peek_line():
-				self.read_line()
 		return new_segment
 		
 	def read_time(self):
@@ -122,64 +124,7 @@ class MacCourseLoader():
 					raise EOFError()
 				line=str(line).strip()
 		return line
-	
-	def is_added_message(self,text):
-		messages=[
-			"TOPIC:",
-			"WATER",
-			"week",
-			"MCMASTER AND MOHAWK SITE STUDENTS",
-			"Class ends at 6:20 pm",
-			"MCMASTER AND MOHAWK  STUDENTS",
-			"Body, Mind & Spirit",
-			"Risk Takers",
-			"Alzheimer's Disease",
-			"Economics & Health Care",
-			"Space Medicine",
-			"Cell Growth Regulation",
-			"Immunology",
-			"Hlth, Sci & Society in Literature",
-			"Two large classes on September 11, 2014 & February 26, 2015",
-			"BEFORE THE MODERN WORLD",
-			"GREAT DEPR, WWII POST WAR GAINS:CAN",
-			"IMMIGRANTS' EXPERIENCES IN CANADA &",
-			"Hamilton: Global in the Local",
-			"SLAVERY,RACISM&US HISTORY",
-			"US Foreign Relations",
-			"Key Debates in Canadian History",
-			"Characterization of Nanomaterials",
-			"STUDENTS ONLY",
-			"SIX NATIONS POLYTECH SITE",
-			"MOHAWK SITE STREAM E",
-			"MCM & MOH ONLINE W/ PERMISSION ONLY",
-			"SITE",
-			"Sept 4 to Oct 9",
-			"to",
-			"SOCIAL INEQUALITY",
-			"CONSPIRACIES AND COVER UPS",
-			"CONTEMPORARY YOUTH CULTURE",
-			"INNOVATION SOC SCI EXPLORING GLOBAL",
-			"POPULAR CULTURE AND IDENTITY",
-			"MEDIA CONSTRUCT VICTIMS/VILLI CRIME",
-			"SCHOOL CRIME AND VIOLENCE",
-			"CORRUPTION",
-			"IS MULTICULTURALISM DEAD?",
-			"SOCIAL PSYCH HUMAN ANIMAL RELATIONS",
-			"WHY DEVELOPING WORLD DISAPPEARING",
-			"MASCULINITY SOCIAL DIMENSION GENDER",
-			"PRIVACY IN THE INFORMATION AGE",
-			"POPULAR CULTURE AND IDENTITY",
-			"METAPHORS WE LIVE BY",
-			"DISABILITY ACROSS THE LIFE COURSE",
-			"POVERTY:WHO GETS WHAT AND WHY?",
-			"INCLUSION AND EXCLUSION",
-			"TERRORISM POST THE 9/11 WORLD",
-			"HUMAN ANIMAL RELATIONS",
-			"-",]
-		for message in messages:
-			if message.lower() in text.lower():
-				return True
-		return False		
+		
 	def is_course_code(self,text):
 		if len(text)!=4:
 			return False
@@ -193,8 +138,7 @@ class MacCourseLoader():
 			return True
 		return ("/" in text) and len(text)<10
 	def is_prof(self,text):
-
-		return ("," in text) and (text.count(" ")<=3)
+		return ("," in text) and (text.count(" ")<=5)
 	def is_time(self,text):
 		if len(text)!=5 or not(":" in text[2]):
 			return False
@@ -219,14 +163,17 @@ class MacCourseLoader():
 			if dept.lower() in text.lower():
 				return True
 		return False	
-		
+	def is_dept(self,text):
+		return "(" in text and ")" in text
+			
+	
 loader=MacCourseLoader()
 loader.output_file_name="stripped.txt"
 loader.html_file_name="Timetable.htm"
 loader.preload()
 courses=[]
 try:
-	for i in range(1,20000):
+	while true:
 		course=loader.pop_course()
 		if course:
 			courses.append(course)
@@ -234,27 +181,4 @@ try:
 		print("--------------------")
 except EOFError:
 	print("End of file!")
-depts=[]
-for course in courses:
-	depts.append(course.department)
-print(set(depts))
 	
-"""for i in range(0,100):
-text=loader.read_line()
-
-if loader.is_course_code(text):
-	print("Course Code:"+text)
-elif loader.is_class_type(text):
-	print("Class: "+text)
-elif loader.is_room(text):
-	print("Room: "+text)
-elif loader.is_prof(text):
-	print("Professor: "+text)
-elif loader.is_time(text):
-	print("Time: "+text)
-elif loader.is_section(text):
-	print("Section: "+text)
-elif loader.is_days(text):
-	print("Days: "+text)	
-else:
-print(text)"""	
