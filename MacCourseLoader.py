@@ -10,17 +10,13 @@ class MacCourseLoader():
 	current_dept=None
 	peeked_line=False
 	
-	def preload(self):
-		try:
-			self.stripped_file=open(self.output_file_name, 'r')
-		except:
-			self.make_text(self.html_file_name,self.output_file_name)
-		self.stripped_file=open(self.output_file_name, 'r')
-
-		for i in range(0,2):#there are 10 lines before the first department
-			self.read_line()
+	
 	
 	def pop_course(self):
+		#Reads one course from file
+		#returns None if course isn't on
+		#Otherwise gives course
+		
 		line=self.read_line()
 		if self.is_dept(line):
 			self.current_dept=line
@@ -51,6 +47,9 @@ class MacCourseLoader():
 		return new_course
 		
 	def read_course_segment(self):
+		#Reads one course segment
+		#Ensures the course is running
+		#Gets the note if any
 		segment_name=self.read_line()
 		if "EOW" in segment_name:
 			segment_name=self.read_line()
@@ -79,10 +78,10 @@ class MacCourseLoader():
 			if self.is_prof(line):
 				new_segment.prof=self.read_line()
 				line=self.peek_line()
-			if  not (self.is_course_code(line) or self.is_dept(line) or self.is_days(line) or self.is_class_type(line)):#self.is_added_message(self.peek_line()):
+			if self.is_npte(line):
 				line=self.read_line()
 		return new_segment
-		
+			
 	def read_time(self):
 		line=self.read_line()
 		assert self.is_time(line)
@@ -92,6 +91,9 @@ class MacCourseLoader():
 		return hour,min	
 	
 	def make_text(self,html_file_name,output_file_name):
+		#Open HTML
+		#Scrape it with beautiful soup
+		#write out to a file
 		self.html_file_name=html_file_name
 		self.output_file_name=output_file_name
 		
@@ -105,7 +107,19 @@ class MacCourseLoader():
 			fo.close()
 		
 		self.stripped_file=open(output_file_name, 'r')
-		
+	def preload(self):
+		#Try to open file
+		#if it does not exist yet
+		#make it and get ready
+		try:
+			self.stripped_file=open(self.output_file_name, 'r')
+		except:
+			self.make_text(self.html_file_name,self.output_file_name)
+		self.stripped_file=open(self.output_file_name, 'r')
+
+		for i in range(0,2):#there are 10 lines before the first department
+			self.read_line()
+			
 	def peek_line(self):#Reads the the next line in the file but stores it as peekedline
 		self.peeked_line=self.read_line()
 		return self.peeked_line
@@ -125,6 +139,23 @@ class MacCourseLoader():
 				line=str(line).strip()
 		return line
 		
+	def is_note(self,text):
+		#list other methods
+		#iterate and try them all
+		#woo hoo go python
+		other_checks=[
+			self.is_course_code,
+			self.is_class_type,
+			self.is_room,
+			self.is_prof,
+			self.is_time,
+			self.is_section,
+			self.is_days,
+			self.is_dept,]
+		for check in other_checks:
+			if check(text):
+				return False
+		return True
 	def is_course_code(self,text):
 		if len(text)!=4:
 			return False
@@ -151,18 +182,6 @@ class MacCourseLoader():
 			if not word in TimeBlock.day_to_num:
 				return False
 		return True
-	def is_dept(self,text):
-		depts=[
-			"ANTHROPOLOGY (ANTHROP)",
-			"ART (ART)",
-			"ART HISTORY (ART HIST)",
-			"ARTS & SCIENCE (ARTS&SCI)",
-			"ASTRONOMY (ASTRON)",
-			"WOMEN'S STUDIES (WOMEN ST)"]
-		for dept in depts:
-			if dept.lower() in text.lower():
-				return True
-		return False	
 	def is_dept(self,text):
 		return "(" in text and ")" in text
 			
