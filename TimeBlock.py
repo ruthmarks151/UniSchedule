@@ -10,12 +10,14 @@ class TimeBlock:
 		3 : "We",
 		4 : "Th",
 		5 : "Fr",
+		6 : "Sa",
 	}
 	day_to_num = {"Mo" : 1,
 		"Tu" : 2,
 		"We" : 3,
 		"Th" : 4,
 		"Fr" : 5,
+		"Sa" : 6,
 	}
 	
 	def __init__(self,day,start_time_hour,start_time_min,end_time_hour,end_time_min):

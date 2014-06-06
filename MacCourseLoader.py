@@ -36,14 +36,25 @@ class MacCourseLoader():
 		course_section=self.read_line()
 		assert self.is_section(course_section)
 		new_course=Course(self.current_dept,course_code,course_name,course_term,course_section)
+		if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+				self.read_line()
 		while self.is_class_type(self.peek_line()):
 			new_course_segment=self.read_course_segment()
-			new_course.add(new_course_segment)
+			if new_course_segment:
+				new_course.add(new_course_segment)
+			if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+				self.read_line()
 		return new_course
 		
 	def read_course_segment(self):
 		segment_name=self.read_line()
+		if "EOW" in segment_name:
+			segment_name=self.read_line()
 		assert self.is_class_type(segment_name)
+		if "TBA" in self.peek_line():
+			while not (self.is_course_code(self.peek_line()) or self.is_class_type(self.peek_line()) or self.is_dept(self.peek_line())):
+				self.read_line()
+			return None
 		new_segment=CourseSegment(segment_name)
 		while self.is_days(self.peek_line()):
 			line=self.read_line()
@@ -63,7 +74,11 @@ class MacCourseLoader():
 				line=self.peek_line()
 			if self.is_prof(line):
 				new_segment.prof=self.read_line()
-			
+				line=self.peek_line()
+			if  self.is_added_message(self.peek_line()):
+				line=self.read_line()
+			if "EOW" in self.peek_line():
+				self.read_line()
 		return new_segment
 		
 	def read_time(self):
@@ -97,11 +112,74 @@ class MacCourseLoader():
 			line=self.peeked_line
 			self.peeked_line=False
 		else:
-			line=str(self.stripped_file.readline()).strip()
+			line=self.stripped_file.readline()
+			if not line:
+				raise EOFError()
+			line=str(line).strip()
 			while line=="":
-				line=str(self.stripped_file.readline()).strip()
+				line=self.stripped_file.readline()
+				if not line:
+					raise EOFError()
+				line=str(line).strip()
 		return line
-			
+	
+	def is_added_message(self,text):
+		messages=[
+			"TOPIC:",
+			"WATER",
+			"week",
+			"MCMASTER AND MOHAWK SITE STUDENTS",
+			"Class ends at 6:20 pm",
+			"MCMASTER AND MOHAWK  STUDENTS",
+			"Body, Mind & Spirit",
+			"Risk Takers",
+			"Alzheimer's Disease",
+			"Economics & Health Care",
+			"Space Medicine",
+			"Cell Growth Regulation",
+			"Immunology",
+			"Hlth, Sci & Society in Literature",
+			"Two large classes on September 11, 2014 & February 26, 2015",
+			"BEFORE THE MODERN WORLD",
+			"GREAT DEPR, WWII POST WAR GAINS:CAN",
+			"IMMIGRANTS' EXPERIENCES IN CANADA &",
+			"Hamilton: Global in the Local",
+			"SLAVERY,RACISM&US HISTORY",
+			"US Foreign Relations",
+			"Key Debates in Canadian History",
+			"Characterization of Nanomaterials",
+			"STUDENTS ONLY",
+			"SIX NATIONS POLYTECH SITE",
+			"MOHAWK SITE STREAM E",
+			"MCM & MOH ONLINE W/ PERMISSION ONLY",
+			"SITE",
+			"Sept 4 to Oct 9",
+			"to",
+			"SOCIAL INEQUALITY",
+			"CONSPIRACIES AND COVER UPS",
+			"CONTEMPORARY YOUTH CULTURE",
+			"INNOVATION SOC SCI EXPLORING GLOBAL",
+			"POPULAR CULTURE AND IDENTITY",
+			"MEDIA CONSTRUCT VICTIMS/VILLI CRIME",
+			"SCHOOL CRIME AND VIOLENCE",
+			"CORRUPTION",
+			"IS MULTICULTURALISM DEAD?",
+			"SOCIAL PSYCH HUMAN ANIMAL RELATIONS",
+			"WHY DEVELOPING WORLD DISAPPEARING",
+			"MASCULINITY SOCIAL DIMENSION GENDER",
+			"PRIVACY IN THE INFORMATION AGE",
+			"POPULAR CULTURE AND IDENTITY",
+			"METAPHORS WE LIVE BY",
+			"DISABILITY ACROSS THE LIFE COURSE",
+			"POVERTY:WHO GETS WHAT AND WHY?",
+			"INCLUSION AND EXCLUSION",
+			"TERRORISM POST THE 9/11 WORLD",
+			"HUMAN ANIMAL RELATIONS",
+			"-",]
+		for message in messages:
+			if message.lower() in text.lower():
+				return True
+		return False		
 	def is_course_code(self,text):
 		if len(text)!=4:
 			return False
@@ -111,10 +189,12 @@ class MacCourseLoader():
 			return False
 		return ((text[0].isalpha())and(not text[1].isalpha())and(not text[2].isalpha()))		
 	def is_room(self,text):
+		if "MHK/CAMPUS" in text or "CON/CAMPUS" in text:
+			return True
 		return ("/" in text) and len(text)<10
 	def is_prof(self,text):
 
-		return ("," in text) and (text.count(" ")<=1)
+		return ("," in text) and (text.count(" ")<=3)
 	def is_time(self,text):
 		if len(text)!=5 or not(":" in text[2]):
 			return False
@@ -127,33 +207,54 @@ class MacCourseLoader():
 			if not word in TimeBlock.day_to_num:
 				return False
 		return True
+	def is_dept(self,text):
+		depts=[
+			"ANTHROPOLOGY (ANTHROP)",
+			"ART (ART)",
+			"ART HISTORY (ART HIST)",
+			"ARTS & SCIENCE (ARTS&SCI)",
+			"ASTRONOMY (ASTRON)",
+			"WOMEN'S STUDIES (WOMEN ST)"]
+		for dept in depts:
+			if dept.lower() in text.lower():
+				return True
+		return False	
 		
 loader=MacCourseLoader()
 loader.output_file_name="stripped.txt"
 loader.html_file_name="Timetable.htm"
 loader.preload()
-for i in range(1,100):
-	course=loader.pop_course()
-	if course:
-		print(course.to_string())
-	print("--------------------")
-
-"""for i in range(0,100):
-	text=loader.read_line()
+courses=[]
+try:
+	for i in range(1,20000):
+		course=loader.pop_course()
+		if course:
+			courses.append(course)
+			print(course.to_string())
+		print("--------------------")
+except EOFError:
+	print("End of file!")
+depts=[]
+for course in courses:
+	depts.append(course.department)
+print(set(depts))
 	
-	if loader.is_course_code(text):
-		print("Course Code:"+text)
-	elif loader.is_class_type(text):
-		print("Class: "+text)
-	elif loader.is_room(text):
-		print("Room: "+text)
-	elif loader.is_prof(text):
-		print("Professor: "+text)
-	elif loader.is_time(text):
-		print("Time: "+text)
-	elif loader.is_section(text):
-		print("Section: "+text)
-	elif loader.is_days(text):
-		print("Days: "+text)	
-	else:
-	print(text)"""
+"""for i in range(0,100):
+text=loader.read_line()
+
+if loader.is_course_code(text):
+	print("Course Code:"+text)
+elif loader.is_class_type(text):
+	print("Class: "+text)
+elif loader.is_room(text):
+	print("Room: "+text)
+elif loader.is_prof(text):
+	print("Professor: "+text)
+elif loader.is_time(text):
+	print("Time: "+text)
+elif loader.is_section(text):
+	print("Section: "+text)
+elif loader.is_days(text):
+	print("Days: "+text)	
+else:
+print(text)"""	
