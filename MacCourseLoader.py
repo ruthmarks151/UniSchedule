@@ -31,14 +31,14 @@ class MacCourseLoader():
 		course_section=self.read_line()
 		assert self.is_section(course_section)
 		new_course=Course(self.current_dept,course_code,course_name,course_term,course_section)
-		if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+		if "SITE STUDENTS" in self.peek_line():	
 				self.read_line()
 		if "CANCELLED" in self.peek_line():
 			while not (self.is_course_code(self.peek_line()) or self.is_dept(self.peek_line())):
 				self.read_line()
 			return None
 		else:	
-			while self.is_class_type(self.peek_line()):
+			while self.is_class_type(self.peek_line()) or "EOW" in self.peek_line():
 				new_course_segment=self.read_course_segment()
 				if new_course_segment:
 					new_course.add(new_course_segment)
@@ -50,15 +50,17 @@ class MacCourseLoader():
 		#Reads one course segment
 		#Ensures the course is running
 		#Gets the note if any
-		segment_name=self.read_line()
-		if "EOW" in segment_name:
-			segment_name=self.read_line()
-		assert self.is_class_type(segment_name)
+		new_segment=CourseSegment()
+		line=self.read_line()
+		if "EOW" in line:
+			new_segment.eow=True
+			line=self.read_line()
+		assert self.is_class_type(line)
+		new_segment.name=line
 		if "TBA" in self.peek_line():
 			while not (self.is_course_code(self.peek_line()) or self.is_class_type(self.peek_line()) or self.is_dept(self.peek_line())):
 				self.read_line()
 			return None
-		new_segment=CourseSegment(segment_name)
 		while self.is_days(self.peek_line()):
 			line=self.read_line()
 			assert self.is_days(line)
@@ -78,8 +80,8 @@ class MacCourseLoader():
 			if self.is_prof(line):
 				new_segment.prof=self.read_line()
 				line=self.peek_line()
-			if self.is_npte(line):
-				line=self.read_line()
+			if self.is_note(line):
+				new_segment.note=self.read_line()
 		return new_segment
 			
 	def read_time(self):
@@ -110,7 +112,7 @@ class MacCourseLoader():
 	def preload(self):
 		#Try to open file
 		#if it does not exist yet
-		#make it and get ready
+		#make it, prep to read
 		try:
 			self.stripped_file=open(self.output_file_name, 'r')
 		except:
@@ -146,9 +148,6 @@ class MacCourseLoader():
 		other_checks=[
 			self.is_course_code,
 			self.is_class_type,
-			self.is_room,
-			self.is_prof,
-			self.is_time,
 			self.is_section,
 			self.is_days,
 			self.is_dept,]
@@ -184,20 +183,4 @@ class MacCourseLoader():
 		return True
 	def is_dept(self,text):
 		return "(" in text and ")" in text
-			
-	
-loader=MacCourseLoader()
-loader.output_file_name="stripped.txt"
-loader.html_file_name="Timetable.htm"
-loader.preload()
-courses=[]
-try:
-	while true:
-		course=loader.pop_course()
-		if course:
-			courses.append(course)
-			print(course.to_string())
-		print("--------------------")
-except EOFError:
-	print("End of file!")
-	
+		
