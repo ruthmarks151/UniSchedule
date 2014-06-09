@@ -3,6 +3,7 @@ from Course import Course
 class CoursePicker():
 	courses=[]
 	depts=set([])
+
 	def __init__(self,courses):
 		self.courses=courses
 		for course in courses:
@@ -10,6 +11,8 @@ class CoursePicker():
 		
 	def pick_course(self):
 		choice = self.pick_dept()
+		if choice is None:
+			return None
 		dept_courses=[]
 		for course in self.courses:
 			if course.department == choice:
@@ -33,6 +36,7 @@ class CoursePicker():
 			print(str(index)+". "+self.secheduling(course))
 		choice=self.get_int(index)-1
 		return desired_course[choice]
+		
 	def pick_dept(self):
 		print("Select a Department:")
 		ordered_depts=sorted(list(self.depts))
@@ -43,7 +47,7 @@ class CoursePicker():
 		for index in range(0,len(list)):
 			print(str(index+1)+". "+list[index])
 		print("Enter the number of the desired item, 0 to cancel")
-		inp=self.get_int(index)
+		inp=self.get_int(len(list))
 		if inp==0:
 			return None
 		choice=list[int(inp)-1]
