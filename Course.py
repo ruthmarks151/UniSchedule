@@ -11,7 +11,7 @@ class Course():
 		
 	def add(self,segment):
 		self.segments[segment.name]=segment
-		
+	
 	def to_string(self):
 		out=self.department+"\n"
 		out+=self.code+"\n"
