@@ -34,25 +34,25 @@ class Schedule():
 					seg.add(TimeBlock(i,8,00,9,00))
 					if self.courses[key].segments[segment].conflict_with(seg):
 						score-=2
-		#print("-"*self.recursion_depth+" "+str(score))
 		return score
-		
+			
 	def pick_courses(self):
 		self.recursion_depth+=1
-		print("-"*self.recursion_depth)
-		try: 
-			pick_for=(set(self.courses.keys())-set(self.attended_segments.keys())).pop()
-			print("-"*self.recursion_depth+str(pick_for))
-			self.pick_segments(self.courses[pick_for])
-		except KeyError:#No more courses to pick for, This is the end of the tree
-			if self.is_valid() and (self.score()>self.winning_score):
-				print("-"*self.recursion_depth+"Winner Found")
-				self.winning_segments=copy.deepcopy(self.attended_segments)
-				self.winning_score=self.score()
-		print("-"*self.recursion_depth)
+		#print("-"*self.recursion_depth)
+		pick_for=self.unpicked().pop()
+		self.pick_segments(self.courses[pick_for])
 		self.recursion_depth-=1
-		
-		
+	
+	def unpicked(self):
+		return set(set(self.courses.keys()-self.attended_segments.keys()))
+	
+	def solution_found(self):
+			#print(self.recursion_depth*"-"+"Root")
+			if self.score()>self.winning_score:
+				self.winning_segments=copy.deepcopy(self.attended_segments)
+				print(self.winning_segments)
+				self.winning_score=self.score()
+				
 	def unique_first_chars(self,list):
 		chars=[]
 		for item in list:
@@ -60,11 +60,8 @@ class Schedule():
 		return set(chars)
 	
 	def pick_segments(self,course):
-		self.recursion_depth+=1
-		print("-"*self.recursion_depth)
 		segments=list(course.segments.keys())
 		pick_for=self.unique_first_chars(segments)
-		#print("-"*self.recursion_depth+"Pick Segments")
 		matrix=[]
 		for type in pick_for:
 			options=[]
@@ -74,6 +71,8 @@ class Schedule():
 			matrix.append(options)
 		for combo in product(*matrix):
 			self.attended_segments[course.tuple_key()]=list(combo)
-			self.pick_courses()
-		print("-"*self.recursion_depth)
-		self.recursion_depth-=1
+			if self.unpicked():
+				self.pick_courses()
+			else:
+				self.solution_found()
+			self.attended_segments.pop(course.tuple_key(),None)
