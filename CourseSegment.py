@@ -18,7 +18,8 @@ class CourseSegment:
 		for block in self.time_blocks:
 			for other in other_segment.blocks():
 				if block.conflict_with(other):
-					return True
+					if not (self.eow and other_segment.eow):
+						return True
 		return False
 	
 	def to_string(self):

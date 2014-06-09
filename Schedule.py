@@ -2,6 +2,7 @@ from Course import Course
 from CourseSegment import CourseSegment
 from TimeBlock import TimeBlock
 import copy
+from itertools import product
 
 class Schedule():
 	
@@ -31,7 +32,7 @@ class Schedule():
 		try: 
 			pick_for=(set(self.courses.keys())-set(self.attended_segments.keys())).pop()
 			types = self.unique_first_chars(self.courses[pick_for].segments.keys())
-			self.pick_segments(self.courses[pick_for],types,[])
+			self.pick_segments(self.courses[pick_for])
 		except KeyError:#No more courses to pick for, This is the end of the tree
 			print("-"*self.recursion_depth+"No courses left to pick")
 			if self.is_valid():
@@ -48,27 +49,19 @@ class Schedule():
 			chars.append(item[0])
 		return set(chars)
 	
-	def pick_segments(self,course,types,picked):
+	def pick_segments(self,course):
 		self.recursion_depth+=1
-		print("-"*self.recursion_depth+"Pick Segments")
-		if not types.issubset(set()):
-			pick=types.pop()
+		segments=list(course.segments.keys())
+		pick_for=self.unique_first_chars(segments)
+		matrix=[]
+		for type in pick_for:
 			options=[]
-			for segment_key in course.segments.keys():
-				if pick in segment_key:
-					options.append(segment_key)
-			for option in options:
-				picked.append(option)
-				self.pick_segments(course,types,picked)	
-				picked.pop()
-		else:
+			for segment in segments:
+				if type in segment:
+					options.append(segment)
+			matrix.append(options)
+		for combo in product(*matrix):
+			self.attended_segments[course.tuple_key()]=list(combo)
 			if self.is_valid():
-				self.attended_segments[course.tuple_key()]=picked
 				self.pick_courses()
-			else:
-				print("-"*self.recursion_depth+"Invalid Combination")
-		print("-"*self.recursion_depth+"End Pick Segments")
 		self.recursion_depth-=1
-		return None
-		
-		
