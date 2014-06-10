@@ -8,6 +8,19 @@ class CoursePicker():
 		self.courses=courses
 		for course in courses:
 			self.depts.add(course.department)
+	def load_file(self):
+		desired_courses=dict()
+		
+		with open("courses.txt") as f:
+			for line in f.readlines():
+				arguments=line.split(",")
+				for course in self.courses:
+					if arguments[0] in course.department:
+						if arguments[1] in course.code:
+							if arguments[2] in str(course.term):
+								if course.section in arguments[3]:
+									desired_courses[course.tuple_key()]=course
+		return desired_courses
 		
 	def pick_course(self):
 		choice = self.pick_dept()
