@@ -20,14 +20,20 @@ class TimeBlock:
 		"Sa" : 6,
 	}
 	
-	def __init__(self,day,start_time_hour,start_time_min,end_time_hour,end_time_min):
+	def __init__(self,day,start_time_hour,start_time_min,end_time_hour,end_time_min,term):
 		self.day=day
 		self.start_time_hour=start_time_hour
 		self.start_time_min=start_time_min
 		self.end_time_hour=end_time_hour
 		self.end_time_min=end_time_min
+		self.term=term
+	
+	def tuple_key(self):
+		return (self.day,self.start_time_hour,self.start_time_min,self.end_time_hour,self.end_time_min)
 	
 	def conflict_with(self,other_block):
+		if not (self.term==other_block.term or max([self.term,other_block.term])==3):
+			return False
 		if self.day is not other_block.day:
 			return False
 		return max(self.start_numeric(),other_block.start_numeric())<min(self.end_numeric(),other_block.end_numeric()) 
@@ -45,10 +51,10 @@ class TimeBlock:
 		return self.num_to_day[self.day]+" "+str(self.start_time_hour)+":"+str(self.start_time_min)+"-"+str(self.end_time_hour)+":"+str(self.end_time_min)
 
 """Test Cases"""		
-base_case = TimeBlock(1,8,00,9,00)
-conflicting =  TimeBlock(1,8,30,9,30)
-almost_conflicting = TimeBlock(1,9,00,10,0)
-different_day =  TimeBlock(2,8,30,9,30)
+base_case = TimeBlock(1,8,00,9,00,1)
+conflicting =  TimeBlock(1,8,30,9,30,1)
+almost_conflicting = TimeBlock(1,9,00,10,0,1)
+different_day =  TimeBlock(2,8,30,9,30,1)
 
 if not base_case.conflict_with(conflicting):
 	print("Basic test failed")

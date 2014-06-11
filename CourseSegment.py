@@ -22,6 +22,17 @@ class CourseSegment:
 						return True
 		return False
 	
+	def coincident_with(self,other):
+		if not len(self.time_blocks)==len(other.time_blocks):
+			return False
+		for block in self.time_blocks:
+			if not block.tuple_key() in [b.tuple_key() for b in other.time_blocks]:
+				return False
+		return True
+	
+	def tuple_key(self):
+		return tuple(f.tuple_key() for f in self.time_blocks)
+	
 	def to_string(self):
 		out=""
 		if self.eow:
@@ -32,22 +43,26 @@ class CourseSegment:
 		if self.prof:	out+=self.prof+"\n"
 		if self.note:	out+=self.note+"\n"
 		return out
-		
+
+"""		
 chem_core_1=CourseSegment()
-chem_core_1.add(TimeBlock(1,8,00,9,00))
-chem_core_1.add(TimeBlock(2,8,30,9,30))
+chem_core_1.add(TimeBlock(1,8,00,9,00,1))
+chem_core_1.add(TimeBlock(2,8,30,9,30,1))
 
 math_core_1=CourseSegment() 
-math_core_1.add(TimeBlock(4,9,00,10,30))
-math_core_1.add(TimeBlock(1,9,00,10,0))
+math_core_1.add(TimeBlock(4,9,00,10,30,1))
+math_core_1.add(TimeBlock(1,9,00,10,0,1))
 
 math_core_2=CourseSegment() 
-math_core_2.add(TimeBlock(1,8,30,10,30))
-math_core_2.add(TimeBlock(3,9,00,10,0))
+math_core_2.add(TimeBlock(1,8,30,10,30,1))
+math_core_2.add(TimeBlock(3,9,00,10,0,1))
 
+if not chem_core_1.coincident_with(chem_core_1):
+	print("Coincidince check failed")
 
 if(chem_core_1.conflict_with(math_core_1)):
 	print("False Positive")
 	
 if not (chem_core_1.conflict_with(math_core_2)):
 	print("Missed Conflict")
+"""

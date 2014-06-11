@@ -52,17 +52,17 @@ class Schedule():
 			for i in range(1,6):
 				for segment in self.attended_segments[key]:
 					seg=CourseSegment()
-					seg.add(TimeBlock(i,8,00,9,00))#Does it conflict with my appointment with sleep?
+					seg.add(TimeBlock(i,8,00,9,00,3))#Does it conflict with my appointment with sleep?
 					if self.courses[key].segments[segment].conflict_with(seg):
 						score-=2
 					seg=CourseSegment()
-					seg.add(TimeBlock(i,17,00,23,00))#conflict with being done at 5
+					seg.add(TimeBlock(i,17,00,23,00,3))#conflict with being done at 5
 					if self.courses[key].segments[segment].conflict_with(seg):
 						score-=1
 			for i in range(18,12):
 				for segment in self.attended_segments[key]:
 					seg=CourseSegment()
-					seg.add(TimeBlock(5,i,00,i+1,00))#Does it conflict with friday plans
+					seg.add(TimeBlock(5,i,00,i+1,00,3))#Does it conflict with friday plans
 					if self.courses[key].segments[segment].conflict_with(seg):
 						score+=2	
 		return score
@@ -100,9 +100,10 @@ class Schedule():
 	def solution_found(self): 
 			self.tried_combinations+=1
 			if self.score()>self.winning_score:
-				pprint(self.attended_segments)
-				self.winning_segments=dict(self.attended_segments)
-				self.winning_score=self.score()
+				if self.is_valid():
+					pprint(self.attended_segments)
+					self.winning_segments=dict(self.attended_segments)
+					self.winning_score=self.score()
 				
 	def unique_first_chars(self,list):
 		chars=[]
@@ -117,8 +118,8 @@ class Schedule():
 			self.layer_progress[self.recursion_depth]=1
 		total_progress=self.tried_combinations/self.combinations
 		total_progress*=100
-		if total_progress>(self.last_percent+0.00001):
-			print("{:.5f}".format(total_progress) +" % Complete")
+		if total_progress>(self.last_percent+0.01):
+			print("{:.2f}".format(total_progress) +" % Complete")
 			self.last_percent=total_progress
 			
 	def pick_segments(self,course):

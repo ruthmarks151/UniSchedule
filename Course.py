@@ -1,5 +1,7 @@
 from CourseSegment import CourseSegment
 from TimeBlock import TimeBlock
+from pprint import pprint
+
 class Course():
 	def __init__(self,dept,course_code,course_name,course_term,course_section):
 		self.department=dept
@@ -8,10 +10,23 @@ class Course():
 		self.term=course_term #Using McMaster's system with Semester 1 or 2 with semester 3 being both semesters
 		self.section=course_section #Courses are either DAY or EVE
 		self.segments=dict()
+		self.coincident_segments=dict()
 		
 	def add(self,segment):
 		self.segments[segment.name]=segment
 	
+	def consolidate_courses(self):
+		for segment in self.segments.values():
+			try:
+				self.coincident_segments[segment.tuple_key()].append(segment)
+			except KeyError:
+				self.coincident_segments[segment.tuple_key()]=[segment]					
+	
+	def key_to_names(self,tuple_key):
+		names=[]
+		for element in self.coincident_segments[tuple_key]:
+			names.append(element.name)
+		return names
 	def to_string(self):
 		out=self.department+"\n"
 		out+=self.code+"\n"
@@ -24,36 +39,38 @@ class Course():
 	
 	def tuple_key(self):
 		return (self.department,self.code,self.term,self.section)
-"""	
+		
 chem_101=Course("Chemistry","1C01","Intro To Chemistry",1,"DAY")
 
 chem_core_1=CourseSegment()
 chem_core_1.prof="Chem Prof"
 chem_core_1.name="C01"
-chem_core_1.add(TimeBlock(1,8,00,9,00))
-chem_core_1.add(TimeBlock(2,8,30,9,30))
+chem_core_1.add(TimeBlock(1,8,00,9,00,1))
+chem_core_1.add(TimeBlock(2,8,30,9,30,1))
 
 chem_core_2=CourseSegment()
 chem_core_2.prof="Chem Prof"
 chem_core_2.name="C02"
-chem_core_2.add(TimeBlock(1,9,00,10,00))
-chem_core_2.add(TimeBlock(4,8,30,9,30))
+chem_core_2.add(TimeBlock(1,8,00,9,00,1))
+chem_core_2.add(TimeBlock(2,8,30,9,30,1))
 
 chem_lab_1=CourseSegment()
 chem_lab_1.name="L01" 
-chem_lab_1.add(TimeBlock(4,9,00,10,30))
-chem_lab_1.add(TimeBlock(1,9,00,10,0))
+chem_lab_1.add(TimeBlock(4,9,00,10,30,1))
+chem_lab_1.add(TimeBlock(1,9,00,10,0,1))
 
 chem_lab_2=CourseSegment()
 chem_lab_2.name="L02"
-chem_lab_2.add(TimeBlock(4,10,00,11,00))
-chem_lab_2.add(TimeBlock(5,9,00,10,0))
-
+chem_lab_2.add(TimeBlock(4,9,00,10,30,1))
+chem_lab_2.add(TimeBlock(1,9,00,10,0,1))
 
 chem_101.add(chem_core_1)
 chem_101.add(chem_core_2)
 chem_101.add(chem_lab_1)
 chem_101.add(chem_lab_2)
 
-print(chem_101.to_string())
-"""
+chem_101.consolidate_courses()
+for i in chem_101.coincident_segments.keys():
+	print(chem_101.key_to_names(i))
+
+

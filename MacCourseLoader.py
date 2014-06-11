@@ -68,11 +68,12 @@ class MacCourseLoader():
 			
 			start_hour,start_min=self.read_time()
 			end_hour,end_min=self.read_time()
+			term=int(self.read_line())
 			
 			for day in days:
-				block=TimeBlock(TimeBlock.day_to_num[day],start_hour,start_min,end_hour,end_min)
+				block=TimeBlock(TimeBlock.day_to_num[day],start_hour,start_min,end_hour,end_min,term)
 				new_segment.add(block)
-			term=self.read_line()
+			
 			line=self.peek_line()
 			if self.is_room(line):
 				new_segment.room=self.read_line()
