@@ -4,7 +4,6 @@ from TimeBlock import TimeBlock
 import copy
 from itertools import product
 from pprint import pprint
-import time 
 
 class Schedule():
 	
@@ -14,8 +13,23 @@ class Schedule():
 		self.winning_segments=dict()#This will hold the current winner
 		self.recursion_depth=0
 		self.winning_score=-10000
-		self.last_heartbeat=time.clock()
-		self.start_time=time.clock()
+		self.layer_sizes=dict()
+		self.layer_progress=dict()
+		self.last_percent=0
+		self.tried_combinations=0
+		self.combinations=1
+		for course in courses.values():
+			segments=list(course.segments.keys())
+			pick_for=self.unique_first_chars(segments)
+			matrix=[]
+			for type in pick_for:
+				options=[]
+				for segment in segments:
+					if type in segment:
+						options.append(segment)
+				matrix.append(options)
+			self.combinations*=sum(1 for _ in product(*matrix))
+			
 		
 	def is_valid(self):
 		for course1 in self.attended_segments.keys():
@@ -34,8 +48,6 @@ class Schedule():
 		
 	def score(self):
 		score=0
-		if not self.is_valid():
-			return -10000
 		for key in self.attended_segments.keys():
 			for i in range(1,6):
 				for segment in self.attended_segments[key]:
@@ -43,6 +55,10 @@ class Schedule():
 					seg.add(TimeBlock(i,8,00,9,00))#Does it conflict with my appointment with sleep?
 					if self.courses[key].segments[segment].conflict_with(seg):
 						score-=2
+					seg=CourseSegment()
+					seg.add(TimeBlock(i,17,00,23,00))#conflict with being done at 5
+					if self.courses[key].segments[segment].conflict_with(seg):
+						score-=1
 			for i in range(18,12):
 				for segment in self.attended_segments[key]:
 					seg=CourseSegment()
@@ -66,10 +82,25 @@ class Schedule():
 	def unpicked(self):
 		return set(set(self.courses.keys()-self.attended_segments.keys()))
 	
-	def solution_found(self):
-			#print(self.recursion_depth*"-"+"Root")
+	def conflict_with(self,tuple_key):
+		course1=tuple_key
+		for segment1 in self.attended_segments[course1]:
+			for segment2 in self.attended_segments[course1]:
+				if not segment1 is segment2:
+					if self.courses[course1].segments[segment1].conflict_with(self.courses[course1].segments[segment2]):
+						return True
+		for course2 in self.attended_segments.keys():
+			if not course1==course2:
+				for segment1 in self.attended_segments[course1]:
+					for segment2 in self.attended_segments[course2]:
+						if self.courses[course1].segments[segment1].conflict_with(self.courses[course2].segments[segment2]):
+							return True
+		return False						
+				
+	def solution_found(self): 
+			self.tried_combinations+=1
 			if self.score()>self.winning_score:
-				print("Winner Found")
+				pprint(self.attended_segments)
 				self.winning_segments=dict(self.attended_segments)
 				self.winning_score=self.score()
 				
@@ -78,13 +109,19 @@ class Schedule():
 		for item in list:
 			chars.append(item[0])
 		return set(chars)
-	def heartbeat(self):
-		if time.clock()-5>self.last_heartbeat:
-			self.last_heartbeat=time.clock()
-			print("Your schedule has been generating for "+str(int(time.clock()-self.start_time))+" Seconds")
+			
+	def percent_complete(self):
+		try:
+			self.layer_progress[self.recursion_depth]+=1
+		except KeyError:
+			self.layer_progress[self.recursion_depth]=1
+		total_progress=self.tried_combinations/self.combinations
+		total_progress*=100
+		if total_progress>(self.last_percent+0.00001):
+			print("{:.5f}".format(total_progress) +" % Complete")
+			self.last_percent=total_progress
 			
 	def pick_segments(self,course):
-		self.heartbeat()
 		segments=list(course.segments.keys())
 		pick_for=self.unique_first_chars(segments)
 		matrix=[]
@@ -94,15 +131,21 @@ class Schedule():
 				if type in segment:
 					options.append(segment)
 			matrix.append(options)
-		iter=0
+			try:
+				self.layer_sizes[self.recursion_depth]
+			except KeyError:
+				self.layer_sizes[self.recursion_depth]=sum(1 for _ in product(*matrix))				
 		for combo in product(*matrix):
-			if self.recursion_depth==1:
-				print(iter/sum(1 for _ in product(*matrix)))
-				iter+=1
+			self.percent_complete()
 			self.attended_segments[course.tuple_key()]=list(combo)
 			if self.unpicked():
-				if self.is_valid():
+				if not self.conflict_with(course.tuple_key()):
 					self.pick_courses()
+				else:
+					eliminated_combinations=1
+					for i in range(len(self.courses),self.recursion_depth):
+						eliminated_combinations*=self.layer_sizes[i]
+					self.tried_combinations+=eliminated_combinations
 			else:
 				self.solution_found()
 			self.attended_segments.pop(course.tuple_key(),None)
