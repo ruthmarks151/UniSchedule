@@ -10,7 +10,7 @@ class Course():
 		self.term=course_term #Using McMaster's system with Semester 1 or 2 with semester 3 being both semesters
 		self.section=course_section #Courses are either DAY or EVE
 		self.segments=dict()
-		self.coincident_segments=dict()
+		self.coincident_segments=dict(dict())
 		
 	def add(self,segment):
 		self.segments[segment.name]=segment
@@ -18,13 +18,18 @@ class Course():
 	def consolidate_courses(self):
 		for segment in self.segments.values():
 			try:
-				self.coincident_segments[segment.tuple_key()].append(segment)
+				self.coincident_segments[segment.name[0]][segment.tuple_key()].append(segment)
 			except KeyError:
-				self.coincident_segments[segment.tuple_key()]=[segment]					
-	
+				try:
+					self.coincident_segments[segment.name[0]][segment.tuple_key()]=[segment,]
+				except KeyError:
+					self.coincident_segments[segment.name[0]]=dict()
+					self.coincident_segments[segment.name[0]][segment.tuple_key()]=[segment]
+					
+					
 	def key_to_names(self,tuple_key):
 		names=[]
-		for element in self.coincident_segments[tuple_key]:
+		for element in  self.coincident_segments[type][tuple_key]:
 			names.append(element.name)
 		return names
 	def to_string(self):
@@ -39,7 +44,7 @@ class Course():
 	
 	def tuple_key(self):
 		return (self.department,self.code,self.term,self.section)
-		
+#"""	
 chem_101=Course("Chemistry","1C01","Intro To Chemistry",1,"DAY")
 
 chem_core_1=CourseSegment()
@@ -70,7 +75,9 @@ chem_101.add(chem_lab_1)
 chem_101.add(chem_lab_2)
 
 chem_101.consolidate_courses()
-for i in chem_101.coincident_segments.keys():
-	print(chem_101.key_to_names(i))
-
-
+for type in chem_101.coincident_segments.keys():
+	print(type)
+	for i in chem_101.coincident_segments[type].keys():
+		print(chem_101.key_to_names(i))
+		
+#"""

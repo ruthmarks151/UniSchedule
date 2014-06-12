@@ -15,10 +15,10 @@ class CoursePicker():
 			for line in f.readlines():
 				arguments=line.split(",")
 				for course in self.courses:
-					if arguments[0] in course.department:
-						if arguments[1] in course.code:
-							if arguments[2] in str(course.term):
-								if course.section in arguments[3]:
+					if arguments[0].strip() in course.department:
+						if arguments[1].strip() in course.code:
+							if arguments[2].strip() in str(course.term):
+								if course.section in arguments[3].strip():
 									desired_courses[course.tuple_key()]=course
 		return desired_courses
 		
