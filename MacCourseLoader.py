@@ -44,6 +44,7 @@ class MacCourseLoader():
 					new_course.add(new_course_segment)
 				if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
 					self.read_line()
+		new_course.consolidate_courses()
 		return new_course
 		
 	def read_course_segment(self):

@@ -27,8 +27,8 @@ while course:
 	print("Adding \n"+course.to_string()+"to your schedule")
 	picked_courses[course.tuple_key()]=course
 	course=picker.pick_course()"""
+	
 picked_courses=picker.load_file()
 schedule=Schedule(picked_courses)
-print(schedule.courses)
 schedule.pick_courses()
 schedule.print_winner()

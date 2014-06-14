@@ -44,7 +44,7 @@ class Course():
 	
 	def tuple_key(self):
 		return (self.department,self.code,self.term,self.section)
-#"""	
+"""	
 chem_101=Course("Chemistry","1C01","Intro To Chemistry",1,"DAY")
 
 chem_core_1=CourseSegment()
@@ -70,7 +70,7 @@ chem_lab_2.add(TimeBlock(4,9,00,10,30,1))
 chem_lab_2.add(TimeBlock(1,9,00,10,0,1))
 
 chem_101.add(chem_core_1)
-chem_101.add(chem_core_2)
+chem_101.add(chem_core_2) 
 chem_101.add(chem_lab_1)
 chem_101.add(chem_lab_2)
 
@@ -80,4 +80,4 @@ for type in chem_101.coincident_segments.keys():
 	for i in chem_101.coincident_segments[type].keys():
 		print(chem_101.key_to_names(i))
 		
-#"""
+"""

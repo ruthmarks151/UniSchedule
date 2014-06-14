@@ -18,19 +18,16 @@ class Schedule():
 		self.last_percent=0
 		self.tried_combinations=0
 		self.combinations=1
+		matrix=[]
 		for course in courses.values():
-			segments=list(course.segments.keys())
-			pick_for=self.unique_first_chars(segments)
-			matrix=[]
-			for type in pick_for:
+			for type in course.coincident_segments.keys():
 				options=[]
-				for segment in segments:
-					if type in segment:
-						options.append(segment)
-				matrix.append(options)
+				segments=course.coincident_segments[type]
+				for segment in segments.keys():
+					options.append(segments[segment][0].name)
+			matrix.append(options)
 			self.combinations*=sum(1 for _ in product(*matrix))
-			
-		
+					
 	def is_valid(self):
 		for course1 in self.attended_segments.keys():
 			for segment1 in self.attended_segments[course1]:
@@ -118,24 +115,24 @@ class Schedule():
 			self.layer_progress[self.recursion_depth]=1
 		total_progress=self.tried_combinations/self.combinations
 		total_progress*=100
-		if total_progress>(self.last_percent+0.01):
-			print("{:.2f}".format(total_progress) +" % Complete")
+		if total_progress>(self.last_percent+0.1):
+			print("{:.1f}".format(total_progress) +" % Complete")
 			self.last_percent=total_progress
 			
 	def pick_segments(self,course):
-		segments=list(course.segments.keys())
-		pick_for=self.unique_first_chars(segments)
 		matrix=[]
-		for type in pick_for:
+		for type in course.coincident_segments.keys():
 			options=[]
-			for segment in segments:
-				if type in segment:
-					options.append(segment)
+			segments=course.coincident_segments[type]
+			for segment in segments.keys():
+				options.append(segments[segment][0].name)
 			matrix.append(options)
-			try:
-				self.layer_sizes[self.recursion_depth]
-			except KeyError:
-				self.layer_sizes[self.recursion_depth]=sum(1 for _ in product(*matrix))				
+			
+		try:
+			self.layer_sizes[self.recursion_depth]
+		except KeyError:
+			self.layer_sizes[self.recursion_depth]=sum(1 for _ in product(*matrix))		
+				
 		for combo in product(*matrix):
 			self.percent_complete()
 			self.attended_segments[course.tuple_key()]=list(combo)
