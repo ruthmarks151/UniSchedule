@@ -14,36 +14,51 @@ class MacCourseLoader():
 	
 	def pop_course(self):
 		#Reads one course from file
-		#returns None if course isn't on
+		#returns None if course isn't scheduled for this year
 		#Otherwise gives course
 		
 		line=self.read_line()
+		
+		#Occasionally instead of a course's information a line will have a new
+		#department, if this is the case set the department to the current line
+		#and then read in another line which should be a course code
 		if self.is_dept(line):
 			self.current_dept=line
-			line=self.read_line()		
+			line=self.read_line()	
+			
 		course_code=line
 		assert self.is_course_code(course_code)
+		
 		course_name=self.read_line()
+		
 		line=self.read_line()
-		if line=="NOT OFFERED":
+		if line in "NOT OFFERED":#This exact string is used to indicate not offered courses
 			return None
-		course_term=int(line[len(line)-1])
-		course_section=self.read_line()
+		course_term=int(line[-1])#Get the last character of the line, "T1" -> 1
+		
+		course_section=self.read_line()#DAY or NIGHT are the exact strings
 		assert self.is_section(course_section)
+		
+		#All of the course's information has been loaded so the course is created
 		new_course=Course(self.current_dept,course_code,course_name,course_term,course_section)
-		if "SITE STUDENTS" in self.peek_line():	
+		
+		#If information about what site the course is for is given, it is skipped over
+		if "SITE STUDENTS" in self.peek_line():
 				self.read_line()
+				
+		#If the course is cancelled read ahead until the next line is a course or a department
 		if "CANCELLED" in self.peek_line():
 			while not (self.is_course_code(self.peek_line()) or self.is_dept(self.peek_line())):
 				self.read_line()
 			return None
-		else:	
-			while self.is_class_type(self.peek_line()) or "EOW" in self.peek_line():
-				new_course_segment=self.read_course_segment()
-				if new_course_segment:
-					new_course.add(new_course_segment)
-				if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
-					self.read_line()
+		
+		#Read in all of the courses segments
+		while self.is_class_type(self.peek_line()) or "EOW" in self.peek_line():
+			new_course_segment=self.read_course_segment()
+			if new_course_segment:
+				new_course.add(new_course_segment)
+			if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+				self.read_line()
 		new_course.consolidate_courses()
 		return new_course
 		
@@ -53,11 +68,14 @@ class MacCourseLoader():
 		#Gets the note if any
 		new_segment=CourseSegment()
 		line=self.read_line()
+		
+		
 		if "EOW" in line:
 			new_segment.eow=True
 			line=self.read_line()
 		assert self.is_class_type(line)
 		new_segment.name=line
+		
 		if "TBA" in self.peek_line():
 			while not (self.is_course_code(self.peek_line()) or self.is_class_type(self.peek_line()) or self.is_dept(self.peek_line())):
 				self.read_line()
@@ -111,6 +129,7 @@ class MacCourseLoader():
 			fo.close()
 		
 		self.stripped_file=open(output_file_name, 'r')
+		
 	def preload(self):
 		#Try to open file
 		#if it does not exist yet
@@ -157,32 +176,40 @@ class MacCourseLoader():
 			if check(text):
 				return False
 		return True
+		
 	def is_course_code(self,text):
 		if len(text)!=4:
 			return False
-		return (not text[0].isalpha())and(text[1].isalpha())and(not text[3].isalpha())		
+		return (not text[0].isalpha())and(text[1].isalpha())and(not text[3].isalpha())	
+		
 	def is_class_type(self,text):
 		if not len(text)==3:
 			return False
-		return ((text[0].isalpha())and(not text[1].isalpha())and(not text[2].isalpha()))		
+		return ((text[0].isalpha())and(not text[1].isalpha())and(not text[2].isalpha()))
+		
 	def is_room(self,text):
 		if "MHK/CAMPUS" in text or "CON/CAMPUS" in text:
 			return True
 		return ("/" in text) and len(text)<10
+		
 	def is_prof(self,text):
 		return ("," in text) and (text.count(" ")<=5)
+		
 	def is_time(self,text):
 		if len(text)!=5 or not(":" in text[2]):
 			return False
 		return text.replace(":","").isnumeric()
+		
 	def is_section(self,text):
-		return text == "DAY" or text == "EVE"		
+		return text == "DAY" or text == "EVE"	
+		
 	def is_days(self,text):
 		words=text.split()
 		for word in words:
 			if not word in TimeBlock.day_to_num:
 				return False
 		return True
+		
 	def is_dept(self,text):
 		return "(" in text and ")" in text
 		
