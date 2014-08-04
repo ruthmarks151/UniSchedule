@@ -21,6 +21,12 @@ class Course():
 	def set_segments(self,given_segments):
 		self.available_segments=given_segments
 		
+	def get_segments(self):
+		keys=[]
+		for segment_name in self.available_segments:
+			keys.append(self.segments[segment_name].tuple_key())
+		return keys
+
 	def add(self,segment):
 		self.segments[segment.name]=segment
 	
