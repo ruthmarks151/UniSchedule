@@ -9,7 +9,7 @@ class MacCourseLoader():
 	stripped_file=None
 	current_dept=None
 	peeked_line=False
-	
+	line_no=0
 	
 	
 	def pop_course(self):
@@ -27,6 +27,10 @@ class MacCourseLoader():
 			line=self.read_line()	
 			
 		course_code=line
+
+		if not self.is_course_code(course_code):
+			print(course_code)
+			print(self.line_no)
 		assert self.is_course_code(course_code)
 		
 		course_name=self.read_line()
@@ -53,11 +57,15 @@ class MacCourseLoader():
 			return None
 		
 		#Read in all of the courses segments
-		while self.is_class_type(self.peek_line()) or "EOW" in self.peek_line():
+		while (self.is_class_type(self.peek_line()) or 
+				"EOW" in self.peek_line() or 
+				"CANCELLED" in self.peek_line() or 
+				"SITE" in self.peek_line()):
+
 			new_course_segment=self.read_course_segment()
 			if new_course_segment:
 				new_course.add(new_course_segment)
-			if "EOW" in self.peek_line() or "SITE STUDENTS" in self.peek_line():
+			if "EOW" in self.peek_line() or "SITE" in self.peek_line():
 				self.read_line()
 		new_course.consolidate_courses()
 		return new_course
@@ -73,13 +81,25 @@ class MacCourseLoader():
 		if "EOW" in line:
 			new_segment.eow=True
 			line=self.read_line()
-		assert self.is_class_type(line)
-		new_segment.name=line
 		
-		if "TBA" in self.peek_line():
-			while not (self.is_course_code(self.peek_line()) or self.is_class_type(self.peek_line()) or self.is_dept(self.peek_line())):
+		if "CANCELLED" in line:
+			while not (self.is_course_code(self.peek_line()) or
+					   self.is_class_type(self.peek_line()) or 
+					   self.is_dept(self.peek_line())):
 				self.read_line()
 			return None
+
+		assert self.is_class_type(line)
+		new_segment.name=line
+
+		if "TBA" in self.peek_line() or "CANCELLED" in self.peek_line():
+			while not (self.is_course_code(self.peek_line()) or 
+						self.is_class_type(self.peek_line()) or 
+					 	self.is_dept(self.peek_line())):
+
+				self.read_line()
+			return None
+
 		while self.is_days(self.peek_line()):
 			line=self.read_line()
 			assert self.is_days(line)
@@ -122,7 +142,7 @@ class MacCourseLoader():
 		with open (self.html_file_name, "r") as myfile:
 			html_doc=myfile.read()
 			soup = BeautifulSoup(html_doc)
-			stripped=soup.get_text().encode("windows-1252")#changing encoding may be needed on other platforms.
+			stripped=soup.get_text().encode("ascii",'ignore')#changing encoding may be needed on other platforms.
 			fo = open(self.output_file_name, "wb")
 			fo.write(stripped)
 			# Close opened file
@@ -146,16 +166,19 @@ class MacCourseLoader():
 	def peek_line(self):#Reads the the next line in the file but stores it as peekedline
 		self.peeked_line=self.read_line()
 		return self.peeked_line
+
 	def read_line(self):#returns the next non blank line in the file, unless a line was peeked, then it returns the peeked line.
 		if self.peeked_line:
 			line=self.peeked_line
 			self.peeked_line=False
 		else:
 			line=self.stripped_file.readline()
+			self.line_no+=1
 			if not line:
 				raise EOFError()
 			line=str(line).strip()
 			while line=="":
+				self.line_no+=1
 				line=self.stripped_file.readline()
 				if not line:
 					raise EOFError()
@@ -193,6 +216,7 @@ class MacCourseLoader():
 		return ("/" in text) and len(text)<10
 		
 	def is_prof(self,text):
+
 		return ("," in text) and (text.count(" ")<=5)
 		
 	def is_time(self,text):
@@ -201,6 +225,7 @@ class MacCourseLoader():
 		return text.replace(":","").isnumeric()
 		
 	def is_section(self,text):
+
 		return text == "DAY" or text == "EVE"	
 		
 	def is_days(self,text):
@@ -211,5 +236,6 @@ class MacCourseLoader():
 		return True
 		
 	def is_dept(self,text):
+
 		return "(" in text and ")" in text
 		
