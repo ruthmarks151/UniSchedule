@@ -25,6 +25,7 @@ class Schedule():
 				segments=course.coincident_segments[type]
 				for segment in segments.keys():
 					options.append(segments[segment][0].name)
+				pprint(options)
 			matrix.append(options)
 			self.combinations*=sum(1 for _ in product(*matrix))
 					

@@ -25,7 +25,7 @@ class CoursePicker():
 										desired_courses[course.tuple_key()]=course
 										last_course_key=course.tuple_key()
 				else:
-					desired_courses[last_course_key].set_segments(line.split(","))
+					desired_courses[last_course_key].set_segments([s.strip() for s in line.split(",")])
 			
 		return desired_courses
 		

@@ -10,7 +10,7 @@ class Course():
 		self.term=course_term #Using McMaster's system with Semester 1 or 2 with semester 3 being both semesters
 		self.section=course_section #Courses are either DAY or EVE
 		self.segments=dict()
-		self.available_segments=list()
+		self.available_segments=dict(dict())
 
 		#Coincident segments are held in a 2D Dictionary.
 		#The first key is a character that represents the segment type
@@ -18,9 +18,24 @@ class Course():
 		#Two segments with the same schedule will have the same scheduling key
 		self.coincident_segments=dict(dict())
 	
-	def set_segments(self,given_segments):
-		self.available_segments=given_segments
-		
+	def set_segments(self,given_segment_names):
+		given_segments=[]
+		for segment_name in given_segment_names:
+			given_segments.append(self.segments[segment_name])
+
+		for segment in given_segments:
+			segment_type=segment.name[0]
+			scheduling_key=segment.tuple_key()
+			try:
+				self.available_segments[segment_type][scheduling_key].append(segment)
+			except KeyError:
+				try:
+					self.available_segments[segment_type][scheduling_key]=[segment,]
+				except KeyError:
+					self.available_segments[segment_type]=dict()
+					self.available_segments[segment_type][scheduling_key]=[segment]
+		self.coincident_segments=self.available_segments
+
 	def get_segments(self):
 		keys=[]
 		for segment_name in self.available_segments:
