@@ -2,6 +2,7 @@ from Course import Course
 from CourseSegment import CourseSegment
 from TimeBlock import TimeBlock
 import copy
+import csv
 from itertools import product
 from pprint import pprint
 
@@ -18,6 +19,17 @@ class Schedule():
 		self.last_percent=0
 		self.tried_combinations=0
 		self.combinations=1
+
+		self.time_prefs=[[0 for x in range(27)] for x in range(5)]
+
+		with open('prefs.csv', newline='') as csvfile:
+		    pref_reader = csv.reader(csvfile, delimiter=',')
+		    row_no=0
+		    for row in pref_reader:
+		    	for col in range(0,5):
+		    		self.time_prefs[col][row_no]=row[col+1]
+		    	row_no=row_no+1;
+
 		matrix=[]
 		for course in courses.values():
 			for type in course.coincident_segments.keys():
@@ -47,22 +59,17 @@ class Schedule():
 	def score(self):
 		score=0
 		for key in self.attended_segments.keys():
-			for i in range(1,6):
-				for segment in self.attended_segments[key]:
+			for day in range(5):
+				for time in range(1,len(self.time_prefs[:][1])):
+					hour=int((time-1)/2)+8
+					minute=(time+1)%2*30
+					
 					seg=CourseSegment()
-					seg.add(TimeBlock(i,8,00,9,00,3))#Does it conflict with my appointment with sleep?
-					if self.courses[key].segments[segment].conflict_with(seg):
-						score-=2
-					seg=CourseSegment()
-					seg.add(TimeBlock(i,17,00,23,00,3))#conflict with being done at 5
-					if self.courses[key].segments[segment].conflict_with(seg):
-						score-=1
-			for i in range(18,12):
-				for segment in self.attended_segments[key]:
-					seg=CourseSegment()
-					seg.add(TimeBlock(5,i,00,i+1,00,3))#Does it conflict with friday plans
-					if self.courses[key].segments[segment].conflict_with(seg):
-						score+=2	
+					seg.add(TimeBlock(day+1,hour,minute,hour,minute+10,3))
+					for segment in self.attended_segments[key]:
+						if not self.courses[key].segments[segment].conflict_with(seg):
+							score+=int(self.time_prefs[day][time])
+		print(score)
 		return score
 			
 	def pick_courses(self):
@@ -97,11 +104,12 @@ class Schedule():
 				
 	def solution_found(self): 
 			self.tried_combinations+=1
-			if self.score()>self.winning_score:
-				if self.is_valid():
+			if self.is_valid():
+				current_score=self.score()
+				if current_score>self.winning_score:
 					pprint(self.attended_segments)
 					self.winning_segments=dict(self.attended_segments)
-					self.winning_score=self.score()
+					self.winning_score=current_score
 				
 	def unique_first_chars(self,list):
 		chars=[]
