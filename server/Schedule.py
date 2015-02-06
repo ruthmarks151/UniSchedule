@@ -7,10 +7,10 @@ from itertools import product
 from pprint import pprint
 
 class Schedule():
-	
+
 	def __init__(self,courses):
 		self.courses=courses#A dict of all the attended courses using the tuple keys as keys
-		self.attended_segments=dict()#The dict will use the courses tuple_key as the key with the value being a tuple of the attended course segments as "C01"		
+		self.attended_segments=dict()#The dict will use the courses tuple_key as the key with the value being a tuple of the attended course segments as "C01"
 		self.winning_segments=dict()#This will hold the current winner
 		self.recursion_depth=0
 		self.winning_score=-10000
@@ -40,7 +40,7 @@ class Schedule():
 				pprint(options)
 			matrix.append(options)
 			self.combinations*=sum(1 for _ in product(*matrix))
-					
+
 	def is_valid(self):
 		for course1 in self.attended_segments.keys():
 			for segment1 in self.attended_segments[course1]:
@@ -55,7 +55,7 @@ class Schedule():
 							if self.courses[course1].segments[segment1].conflict_with(self.courses[course2].segments[segment2]):
 								return False
 		return True
-		
+
 	def score(self):
 		score=0
 		for key in self.attended_segments.keys():
@@ -63,7 +63,7 @@ class Schedule():
 				for time in range(1,len(self.time_prefs[:][1])):
 					hour=int((time-1)/2)+8
 					minute=(time+1)%2*30
-					
+
 					seg=CourseSegment()
 					seg.add(TimeBlock(day+1,hour,minute,hour,minute+10,3))
 					for segment in self.attended_segments[key]:
@@ -71,22 +71,22 @@ class Schedule():
 							score+=int(self.time_prefs[day][time])
 		print(score)
 		return score
-			
+
 	def pick_courses(self):
 		self.recursion_depth+=1
 		#print("-"*self.recursion_depth)
 		pick_for=self.unpicked().pop()
 		self.pick_segments(self.courses[pick_for])
 		self.recursion_depth-=1
-	
+
 	def print_winner(self):
 		print("-*-*-Schedule-*-*-*-")
 		pprint(self.winning_segments)
 		print("-*-*-        -*-*-*-")
-	
+
 	def unpicked(self):
 		return set(set(self.courses.keys()-self.attended_segments.keys()))
-	
+
 	def conflict_with(self,tuple_key):
 		course1=tuple_key
 		for segment1 in self.attended_segments[course1]:
@@ -100,9 +100,9 @@ class Schedule():
 					for segment2 in self.attended_segments[course2]:
 						if self.courses[course1].segments[segment1].conflict_with(self.courses[course2].segments[segment2]):
 							return True
-		return False						
-				
-	def solution_found(self): 
+		return False
+
+	def solution_found(self):
 			self.tried_combinations+=1
 			if self.is_valid():
 				current_score=self.score()
@@ -110,13 +110,13 @@ class Schedule():
 					pprint(self.attended_segments)
 					self.winning_segments=dict(self.attended_segments)
 					self.winning_score=current_score
-				
+
 	def unique_first_chars(self,list):
 		chars=[]
 		for item in list:
 			chars.append(item[0])
 		return set(chars)
-			
+
 	def percent_complete(self):
 		try:
 			self.layer_progress[self.recursion_depth]+=1
@@ -127,7 +127,7 @@ class Schedule():
 		if total_progress>(self.last_percent+0.1):
 			print("{:.1f}".format(total_progress) +" % Complete")
 			self.last_percent=total_progress
-			
+
 	def pick_segments(self,course):
 		matrix=[]
 		for type in course.coincident_segments.keys():
@@ -136,12 +136,12 @@ class Schedule():
 			for segment in segments.keys():
 				options.append(segments[segment][0].name)
 			matrix.append(options)
-			
+
 		try:
 			self.layer_sizes[self.recursion_depth]
 		except KeyError:
-			self.layer_sizes[self.recursion_depth]=sum(1 for _ in product(*matrix))		
-				
+			self.layer_sizes[self.recursion_depth]=sum(1 for _ in product(*matrix))
+
 		for combo in product(*matrix):
 			self.percent_complete()
 			self.attended_segments[course.tuple_key()]=list(combo)
