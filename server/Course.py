@@ -26,6 +26,7 @@ class Course():
 		self.segments[segment.name]=segment
 
 	def set_segments(self,given_segment_names):
+		#Set the coincident_segments to the segments named in given_segment_names
 		segments = [self.segments[name] for name in given_segment_names]
 		self.consolidate_segments(segments)
 
@@ -54,6 +55,7 @@ class Course():
 					#and that we must create it before adding the segment
 					self.coincident_segments[segment_type]=dict()
 					self.coincident_segments[segment_type][scheduling_key]=[segment]
+
 	def key_to_names(self,tuple_key):
 		names=[]
 		for element in  self.coincident_segments[type][tuple_key]:
