@@ -4,8 +4,8 @@ from CourseSegment import CourseSegment
 from TimeBlock import TimeBlock
 
 class MacCourseLoader():
-	html_file_name="Timetable.htm"
-	output_file_name="stripped.txt"
+	html_file_name="Timetable.htm"  #redundant, UniSchedule.py assigns same value
+	output_file_name="stripped.txt" #redundant, UniSchedule.py assigns same value
 	stripped_file=None
 	current_dept=None
 	peeked_line=False
@@ -158,7 +158,7 @@ class MacCourseLoader():
 			self.stripped_file=open(self.output_file_name, 'r')
 		except:
 			self.make_text(self.html_file_name,self.output_file_name)
-		self.stripped_file=open(self.output_file_name, 'r')
+            self.stripped_file=open(self.output_file_name, 'r')
 
 		for i in range(0,2):#there are 10 lines before the first department
 			self.read_line()
@@ -174,15 +174,16 @@ class MacCourseLoader():
 		else:
 			line=self.stripped_file.readline()
 			self.line_no+=1
-			if not line:
+            if line == "":#An empty string indicates EOF
 				raise EOFError()
-			line=str(line).strip()
-			while line=="":
+			line=str(line).strip()#Strip whitespace from the read line
+            while line=="":#If the line was just whitespace
 				self.line_no+=1
 				line=self.stripped_file.readline()
-				if not line:
+				if line == "":#An empty string indicates EOF
 					raise EOFError()
-				line=str(line).strip()
+                
+				line=str(line).strip()#Strip whitespace and newlines
 		return line
 		
 	def is_note(self,text):
