@@ -20,12 +20,13 @@ class TimeBlock:
 		try:#In case the day is given as a string, try and convert it to a number
 			self.day = day_to_num[day]
 		except KeyError:#It's already a number
-			assert()
+			assert(isinstance(day,int))
 			self.day = day
-		self.start_time_hour = start_time_hour
-		self.start_time_min = start_time_min
-		self.end_time_hour = end_time_hour
-		self.end_time_min = end_time_min
+		self.start_time_hour = int(start_time_hour)
+		self.start_time_min = int(start_time_min)
+		self.end_time_hour = int(end_time_hour)
+		self.end_time_min = int(end_time_min)
+
 		self.term = int(term)
 
 	def tuple_key(self):#A tuple that represents all the timing information for the block
