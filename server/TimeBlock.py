@@ -18,7 +18,7 @@ class TimeBlock:
 
 	def __init__(self,day,start_time_hour,start_time_min,end_time_hour,end_time_min,term):
 		try:#In case the day is given as a string, try and convert it to a number
-			self.day = day_to_num[day]
+			self.day = self.day_to_num[day]
 		except KeyError:#It's already a number
 			assert(isinstance(day,int))
 			self.day = day
