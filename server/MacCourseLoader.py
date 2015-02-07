@@ -28,9 +28,10 @@ class MacCourseLoader():
 
 		course_code=line
 
-		if not self.is_course_code(course_code):
-			print(course_code)
-			print(self.line_no)
+		#There are really wierd edge cases were this line isn't a course code
+		#This reads until a course code, solving those errors
+		while not self.is_course_code(course_code):
+			course_code=self.read_line()
 		assert self.is_course_code(course_code)
 
 		course_name=self.read_line()
