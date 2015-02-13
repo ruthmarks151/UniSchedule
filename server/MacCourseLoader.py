@@ -11,9 +11,39 @@ class MacCourseLoader():
 	peeked_line=False
 	line_no=0
 
+	def preload(self):
+		#Try to open file
+		#if it does not exist yet
+		#make it, prep to read
+		try:
+			self.stripped_file=open(self.output_file_name, 'r')
+		except:
+			self.make_text(self.html_file_name,self.output_file_name)
+			self.stripped_file=open(self.output_file_name, 'r')
 
-	def pop_course(self):
-		#Reads one course from file
+		for i in range(0,2):#there are 10 lines before the first department
+			self.read_line()
+
+
+	def make_text(self,html_file_name,output_file_name):
+		#Open HTML
+		#Scrape it with beautiful soup
+		#write out to a file
+		self.html_file_name=html_file_name
+		self.output_file_name=output_file_name
+
+		with open (self.html_file_name, "r") as myfile:
+			html_doc=myfile.read()
+			soup = BeautifulSoup(html_doc)
+			stripped=soup.get_text().encode("ascii",'ignore')#changing encoding may be needed on other platforms.
+			fo = open(self.output_file_name, "wb")
+			fo.write(stripped)
+			# Close opened file
+			fo.close()
+
+		self.stripped_file=open(output_file_name, 'r')
+
+	def pop_course(self):#Reads one course from file
 		#returns None if course isn't scheduled for this year
 		#Otherwise gives course
 
@@ -49,27 +79,23 @@ class MacCourseLoader():
 
 		#If information about what site the course is for is given, it is skipped over
 		if "SITE STUDENTS" in self.peek_line():
-				self.read_line()
+			self.read_line()
 
 		#If the course is cancelled read ahead until the next line is a course or a department
 		if "CANCELLED" in self.peek_line():
-			while not (self.is_course_code(self.peek_line()) or self.is_dept(self.peek_line())):
-				self.read_line()
+			self.read_until([self.is_course_code,self.is_dept])
 			return None
 
 		#Read in all of the courses segments
-		while (self.is_class_type(self.peek_line()) or
-				"EOW" in self.peek_line() or
-				"CANCELLED" in self.peek_line() or
-				"SITE" in self.peek_line()):
-
+		while (self.is_class_type(self.peek_line()) or self.is_ignorable(self.peek_line())):
 			new_course_segment=self.read_course_segment()
 			if new_course_segment:
 				new_course.add(new_course_segment)
-			if "EOW" in self.peek_line() or "SITE" in self.peek_line():
+			if self.is_ignorable(self.peek_line()):
 				self.read_line()
 		#new_course.consolidate_segments()
 		return new_course
+
 
 	def read_course_segment(self):
 		#Reads one course segment
@@ -83,22 +109,18 @@ class MacCourseLoader():
 			new_segment.eow=True
 			line=self.read_line()
 
+		#If the course segment is cancelled, read until the next line is the
+		#start of a new segment or a new course or a new department
 		if "CANCELLED" in line:
-			while not (self.is_course_code(self.peek_line()) or
-					   self.is_class_type(self.peek_line()) or
-					   self.is_dept(self.peek_line())):
-				self.read_line()
-			return None
+			read_until([self.is_course_code,self.is_class_type,self.is_dept])
 
 		assert self.is_class_type(line)
 		new_segment.name=line
 
+		#If there aren't details about the segment, it won't be loaded
+		#Read until the next segment or course is read.
 		if "TBA" in self.peek_line() or "CANCELLED" in self.peek_line():
-			while not (self.is_course_code(self.peek_line()) or
-						self.is_class_type(self.peek_line()) or
-					 	self.is_dept(self.peek_line())):
-
-				self.read_line()
+			self.read_until([self.is_course_code,self.is_class_type,self.is_dept])
 			return None
 
 		while self.is_days(self.peek_line()):
@@ -125,6 +147,17 @@ class MacCourseLoader():
 				new_segment.note=self.read_line()
 		return new_segment
 
+	def read_until(self,functions):
+		still_reading  = True
+		for check in functions:
+			if check(self.peek_line()):
+				still_reading = False
+		while still_reading:
+			self.read_line()
+			for check in functions:
+				if check(self.peek_line()):
+					still_reading = False
+
 	def read_time(self):
 		line=self.read_line()
 		assert self.is_time(line)
@@ -133,62 +166,13 @@ class MacCourseLoader():
 		min=int(min)
 		return hour,min
 
-	def make_text(self,html_file_name,output_file_name):
-		#Open HTML
-		#Scrape it with beautiful soup
-		#write out to a file
-		self.html_file_name=html_file_name
-		self.output_file_name=output_file_name
+	def is_ignorable(self,line):
+		ignorable_words = ["EOW","CANCELLED","SITE"]
+		for word in ignorable_words:
+			if word in line:
+				return True
 
-		with open (self.html_file_name, "r") as myfile:
-			html_doc=myfile.read()
-			soup = BeautifulSoup(html_doc)
-			stripped=soup.get_text().encode("ascii",'ignore')#changing encoding may be needed on other platforms.
-			fo = open(self.output_file_name, "wb")
-			fo.write(stripped)
-			# Close opened file
-			fo.close()
-
-		self.stripped_file=open(output_file_name, 'r')
-
-	def preload(self):
-		#Try to open file
-		#if it does not exist yet
-		#make it, prep to read
-		try:
-			self.stripped_file=open(self.output_file_name, 'r')
-		except:
-			self.make_text(self.html_file_name,self.output_file_name)
-			self.stripped_file=open(self.output_file_name, 'r')
-
-		for i in range(0,2):#there are 10 lines before the first department
-			self.read_line()
-
-	def peek_line(self):#Reads the the next line in the file but stores it as peekedline
-		self.peeked_line=self.read_line()
-		return self.peeked_line
-
-	def read_line(self):#returns the next non blank line in the file, unless a line was peeked, then it returns the peeked line.
-		if self.peeked_line:
-			line=self.peeked_line
-			self.peeked_line=False
-		else:
-			line=self.stripped_file.readline()
-			self.line_no += 1
-			if line == "":
-				#An empty string indicates EOF
-				raise EOFError()
-			line=str(line).strip()#Strip whitespace from the read line
-
-			while line == "":
-				#If the line was just whitespace
-				self.line_no+=1
-				line=self.stripped_file.readline()
-				if line == "":#An empty string indicates EOF
-					raise EOFError()
-
-				line=str(line).strip()#Strip whitespace and newlines
-		return line
+		return False
 
 	def is_note(self,text):
 		#list other methods
@@ -243,3 +227,29 @@ class MacCourseLoader():
 	def is_dept(self,text):
 
 		return "(" in text and ")" in text
+
+	def peek_line(self):#Reads the the next line in the file but stores it as peekedline
+		self.peeked_line=self.read_line()
+		return self.peeked_line
+
+	def read_line(self):#returns the next non blank line in the file, unless a line was peeked, then it returns the peeked line.
+		if self.peeked_line:
+			line=self.peeked_line
+			self.peeked_line=False
+		else:
+			line=self.stripped_file.readline()
+			self.line_no += 1
+			if line == "":
+				#An empty string indicates EOF
+				raise EOFError()
+			line=str(line).strip()#Strip whitespace from the read line
+
+			while line == "":
+				#If the line was just whitespace
+				self.line_no+=1
+				line=self.stripped_file.readline()
+				if line == "":#An empty string indicates EOF
+					raise EOFError()
+
+				line=str(line).strip()#Strip whitespace and newlines
+		return line
