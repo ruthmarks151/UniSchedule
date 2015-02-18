@@ -16,20 +16,19 @@ loader.html_file_name="Timetable.htm"
 
 loader.preload()#Get ready to load all the courses
 
-courses=dict()#All courses in the master timetable
+courses= [] #All courses in the master timetable
 picked_courses=dict()#The courses the user actually wants to take
 
 try:
 	#Read until something throws an EOFError that means the end of the file
 	while True:
-		course=loader.pop_course()
-		if course:#If a course has been returned, add the course to the courses
-			courses[course.tuple_key()]=course
+		courses.append(loader.pop_course())
+
 except EOFError:
 	print("Courses loaded")
 
 #Construct the course picker with the loaded courses
-picker=CoursePicker(courses.values())
+picker=CoursePicker(courses)
 #Load the courses from a file
 picked_courses=picker.load_file()
 #Construct the schedule

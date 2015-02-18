@@ -1,0 +1,1 @@
+var TimTab = angular.module('TimTab',['ngRoute', 'ngResource'])
